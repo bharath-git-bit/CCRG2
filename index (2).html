@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Queue & Appointment Management System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/tabler-icons.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --text-primary: #2c2c2a;
+            --text-secondary: #5f5e5a;
+            --text-accent: #185fa5;
+            --text-success: #27500a;
+            --text-warning: #854f0b;
+            --text-muted: #888780;
+            --surface-0: #f1efe8;
+            --surface-1: #f9f7f2;
+            --surface-2: #ffffff;
+            --bg-accent: #e6f1fb;
+            --bg-success: #eaf3de;
+            --bg-warning: #faeeda;
+            --border: rgba(0,0,0,0.1);
+            --border-accent: #378add;
+            --border-success: #639922;
+            --fill-accent: #378add;
+            --fill-primary: #2c2c2a;
+            --on-accent: #ffffff;
+            --radius: 8px;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --text-primary: #f1f1f0;
+                --text-secondary: #b8b7b0;
+                --text-accent: #85b7eb;
+                --text-success: #97c459;
+                --text-warning: #f0997b;
+                --surface-0: #2c2c2a;
+                --surface-1: #3a3835;
+                --surface-2: #444441;
+                --bg-accent: #0c447c;
+                --bg-success: #27500a;
+                --bg-warning: #633806;
+                --border: rgba(255,255,255,0.1);
+                --border-accent: #85b7eb;
+                --border-success: #97c459;
+                --fill-accent: #85b7eb;
+                --fill-primary: #f1f1f0;
+                --on-accent: #042c53;
+            }
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--surface-0);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .header .icon {
+            font-size: 32px;
+            color: var(--fill-accent);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 0.5px solid var(--border);
+            padding: 0 0 0 0;
+        }
+
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 400;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .tab-button:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-button.active {
+            border-bottom-color: var(--text-accent);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--surface-2);
+            border: 0.5px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+        }
+
+        .card-header {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background: var(--surface-1);
+            border: 0.5px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .metric-value.accent {
+            color: var(--text-accent);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 0.5px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--surface-2);
+            color: var(--text-primary);
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--fill-accent);
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--fill-accent);
+            color: var(--on-accent);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 0.5px solid var(--border-accent);
+            color: var(--text-accent);
+            padding: 0.5rem 1rem;
+            font-size: 13px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-accent);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert-success {
+            background: var(--bg-success);
+            color: var(--text-success);
+            border: 0.5px solid var(--border-success);
+        }
+
+        .queue-visualization {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+            margin-top: 1rem;
+        }
+
+        .queue-item {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            flex-shrink: 0;
+            border: 0.5px solid var(--border);
+        }
+
+        .queue-item.completed {
+            background: var(--bg-success);
+            color: var(--text-success);
+            border-color: var(--border-success);
+        }
+
+        .queue-item.current {
+            background: var(--bg-accent);
+            color: var(--text-accent);
+            border-color: var(--border-accent);
+        }
+
+        .queue-item.waiting {
+            background: var(--surface-1);
+            color: var(--text-secondary);
+        }
+
+        .queue-connector {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+            min-width: 8px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        table th {
+            padding: 1rem;
+            border-bottom: 0.5px solid var(--border);
+            text-align: left;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 13px;
+            background: var(--surface-1);
+        }
+
+        table td {
+            padding: 1rem;
+            border-bottom: 0.5px solid var(--border);
+        }
+
+        table tr:hover {
+            background: var(--surface-1);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: var(--radius);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-completed {
+            background: var(--bg-success);
+            color: var(--text-success);
+        }
+
+        .status-in-progress {
+            background: var(--bg-accent);
+            color: var(--text-accent);
+        }
+
+        .status-waiting {
+            background: var(--bg-warning);
+            color: var(--text-warning);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 1rem;
+        }
+
+        .action-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 1rem;
+            background: var(--surface-1);
+            border: 0.5px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+            color: inherit;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .action-button:hover {
+            background: var(--surface-0);
+            transform: translateY(-2px);
+        }
+
+        .action-button .icon {
+            font-size: 20px;
+            color: var(--fill-accent);
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            table td, table th {
+                padding: 0.75rem;
+            }
+
+            .action-button {
+                padding: 0.75rem;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <i class="ti ti-hourglass-high" style="font-size: 32px; color: #378add;"></i>
+            <div>
+                <h1>Smart Queue Management</h1>
+                <p style="color: var(--text-secondary); margin: 0; font-size: 14px;">Real-time appointment and queue system</p>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('customer')">
+                <i class="ti ti-user" style="vertical-align: -2px;"></i> Customer
+            </button>
+            <button class="tab-button" onclick="switchTab('staff')">
+                <i class="ti ti-briefcase" style="vertical-align: -2px;"></i> Staff
+            </button>
+        </div>
+
+        <!-- Customer View -->
+        <div id="customer" class="tab-content active">
+            <div class="section">
+                <div class="section-title">
+                    <i class="ti ti-clock"></i> Your queue position
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Current position</div>
+                        <div class="metric-value accent" id="position">3</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">In queue</div>
+                        <div class="metric-value" id="queue-length">12</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Avg wait</div>
+                        <div class="metric-value" id="wait-time">18m</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 1rem; font-weight: 500;">Queue flow</div>
+                    <div class="queue-visualization">
+                        <div class="queue-item completed"><i class="ti ti-check" style="font-size: 16px;"></i></div>
+                        <div class="queue-connector"></div>
+                        <div class="queue-item current">2</div>
+                        <div class="queue-connector"></div>
+                        <div class="queue-item current">3</div>
+                        <div class="queue-connector"></div>
+                        <div class="queue-item waiting">4</div>
+                        <div class="queue-connector"></div>
+                        <div class="queue-item waiting">5</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="ti ti-calendar-plus"></i> Book an appointment
+                    </div>
+
+                    <div class="form-group">
+                        <label>Your name</label>
+                        <input type="text" id="name" placeholder="Enter your full name">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phone number</label>
+                        <input type="tel" id="phone" placeholder="+1 (555) 000-0000">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" id="date" value="2024-01-15">
+                        </div>
+                        <div class="form-group">
+                            <label>Time</label>
+                            <select id="time">
+                                <option>09:00</option>
+                                <option>09:30</option>
+                                <option selected>10:00</option>
+                                <option>10:30</option>
+                                <option>11:00</option>
+                                <option>14:00</option>
+                                <option>15:00</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary" onclick="bookAppointment()">
+                        <i class="ti ti-calendar-plus"></i> Book appointment
+                    </button>
+
+                    <div id="success-message" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Staff View -->
+        <div id="staff" class="tab-content">
+            <div class="section">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">In queue</div>
+                        <div class="metric-value">12</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Avg wait time</div>
+                        <div class="metric-value">18m</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Completed today</div>
+                        <div class="metric-value">14</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="ti ti-users"></i> Active queue
+                </div>
+
+                <div class="card">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Appointment</th>
+                                    <th>Status</th>
+                                    <th style="text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>John Smith</strong></td>
+                                    <td>09:00 (15m)</td>
+                                    <td><span class="status-badge status-completed">Completed</span></td>
+                                    <td style="text-align: right;"></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sarah Johnson</strong></td>
+                                    <td>09:20 (20m)</td>
+                                    <td><span class="status-badge status-in-progress">In progress</span></td>
+                                    <td style="text-align: right;">
+                                        <button class="btn-secondary" onclick="completeAppointment(this)">
+                                            <i class="ti ti-check"></i> Complete
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mike Davis</strong></td>
+                                    <td>09:45 (15m)</td>
+                                    <td><span class="status-badge status-waiting">Waiting</span></td>
+                                    <td style="text-align: right;">
+                                        <button class="btn-secondary" onclick="callNext(this)">
+                                            <i class="ti ti-call"></i> Call
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Lisa Anderson</strong></td>
+                                    <td>10:05 (20m)</td>
+                                    <td><span class="status-badge status-waiting">Waiting</span></td>
+                                    <td style="text-align: right;">
+                                        <button class="btn-secondary">
+                                            <i class="ti ti-call"></i> Call
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Quick actions</div>
+                <div class="quick-actions">
+                    <button class="action-button">
+                        <i class="ti ti-volume-3"></i>
+                        Call next
+                    </button>
+                    <button class="action-button">
+                        <i class="ti ti-refresh"></i>
+                        Refresh queue
+                    </button>
+                    <button class="action-button">
+                        <i class="ti ti-download"></i>
+                        Export report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Deactivate all buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Activate clicked button
+            event.target.closest('.tab-button').classList.add('active');
+        }
+
+        function bookAppointment() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+
+            if (!name || !phone) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const message = document.getElementById('success-message');
+            message.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="ti ti-check-circle" style="font-size: 18px;"></i>
+                    Appointment confirmed for ${date} at ${time}
+                </div>
+            `;
+            message.style.display = 'block';
+
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 3000);
+        }
+
+        function callNext(button) {
+            const row = button.closest('tr');
+            row.style.opacity = '0.5';
+            setTimeout(() => {
+                row.style.opacity = '1';
+            }, 500);
+        }
+
+        function completeAppointment(button) {
+            const row = button.closest('tr');
+            const statusCell = row.querySelector('.status-badge');
+            statusCell.textContent = 'Completed';
+            statusCell.className = 'status-badge status-completed';
+            button.parentElement.textContent = '';
+        }
+
+        // Simulate live queue updates
+        setInterval(() => {
+            if (Math.random() > 0.7) {
+                const pos = parseInt(document.getElementById('position').textContent);
+                if (pos > 0) {
+                    document.getElementById('position').textContent = pos - 1;
+                }
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
